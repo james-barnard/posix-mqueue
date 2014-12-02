@@ -71,6 +71,21 @@ posix_mqueue_alloc(VALUE klass)
   return obj;
 }
 
+VALUE posix_mqueue_close(VALUE self)
+{
+  mqueue_t* data;
+
+  TypedData_Get_Struct(self, mqueue_t, &mqueue_type, data);
+
+  if (mq_close(data->fd) == -1) {
+    rb_sys_fail("Message queue close failed, please consult mq_close(3)");
+  }
+
+  data->fd = -1;
+
+  return Qtrue;
+}
+
 VALUE posix_mqueue_unlink(VALUE self)
 {
   mqueue_t* data;
@@ -78,7 +93,7 @@ VALUE posix_mqueue_unlink(VALUE self)
   TypedData_Get_Struct(self, mqueue_t, &mqueue_type, data);
 
   if (mq_unlink(data->queue) == -1) {
-    rb_sys_fail("Message queue unlinking failed, please consume mq_unlink(3)");
+    rb_sys_fail("Message queue unlinking failed, please consult mq_unlink(3)");
   }
 
   return Qtrue;
@@ -345,6 +360,7 @@ void Init_mqueue()
   rb_define_method(mqueue, "msgsize", posix_mqueue_msgsize, 0);
   rb_define_method(mqueue, "size", posix_mqueue_size, 0);
   rb_define_method(mqueue, "unlink", posix_mqueue_unlink, 0);
+  rb_define_method(mqueue, "close", posix_mqueue_close, 0);
   rb_define_method(mqueue, "to_io", posix_mqueue_to_io, 0);
 }
 
